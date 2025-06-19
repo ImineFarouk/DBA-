@@ -2,6 +2,7 @@ package com.imine.farouk.service.imp;
 
 import com.imine.farouk.dto.AccountInfo;
 import com.imine.farouk.dto.BankResponse;
+import com.imine.farouk.dto.EmailDetails;
 import com.imine.farouk.dto.UserDto;
 import com.imine.farouk.entity.User;
 import com.imine.farouk.repository.UserRepository;
@@ -16,6 +17,10 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    EmailService emailService;
+
     @Override
     public BankResponse createAccount(UserDto userDto) {
 
@@ -46,6 +51,17 @@ public class UserServiceImpl implements UserService{
                 .build();
 
         User savedUser = userRepository.save(newUser);
+
+        //Send email alert
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT CREATED")
+                .messageBody("Congratulations! Your Account Has Been Successfullu Created.\nYour Account Details:\n"+
+                        "Account Name: "+ savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName()+"\nAccountNumber: "+savedUser.getAccountNumber())
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATION_CODE)
                 .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
